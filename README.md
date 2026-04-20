@@ -375,7 +375,7 @@ crontab 등록:
 1. 메모리 관련 질문이 들어오면 먼저 해당 에이전트 workspace 기준으로 `claude-vector-memory` 검색을 수행할 것
 2. 가능하면 검색 전에 `sync`를 먼저 실행해 최신 상태를 반영할 것
 3. 우선 `search` 또는 `retrieve` 결과를 기준으로 회상할 것
-4. 결과가 약하거나 확신이 낮을 때만 기존 `memory_search`, `memory_get`를 보조적으로 사용할 것
+4. 결과가 약하거나 확신이 낮을 때만 기존 OpenClaw 기본 메모리 회상 방식을 보조적으로 사용할 것
 5. 최종 답변은 항상 자기 에이전트의 메모리 범위 안에서만 수행할 것
 6. 멀티 에이전트 환경에서는 다른 에이전트 메모리와 섞지 말 것
 
@@ -383,13 +383,10 @@ crontab 등록:
 - 메모리 회상은 앞으로 **`claude-vector-memory` 우선**
 - 먼저 `sync`
 - 그 다음 `search` 또는 `retrieve`
-- 기존 `memory_search`는 fallback
+- 기존 OpenClaw 기본 메모리 회상 방식은 fallback
 - 다른 에이전트 메모리와 섞지 말 것
 
-### 다른 OpenClaw 에이전트에게 전달할 때
-
-권장 운영 규칙 섹션은 그대로 복사해서 OpenClaw 에이전트에게 메시지로 전달하는 용도로 사용할 수 있습니다.
-다만 실제 적용을 위해서는 아래 정보도 함께 전달하는 것을 권장합니다.
+운영 규칙을 실제로 적용할 때는 아래 정보까지 함께 반영하는 것을 권장합니다.
 
 - 프로젝트 위치
   - 예: `/Users/lucas/working/claude-vector-memory`
@@ -399,9 +396,6 @@ crontab 등록:
   - `--source <workspace>/memory`
   - `--index-file <workspace>/MEMORY.md`
   - 두 경로는 반드시 같은 workspace 루트 아래여야 함
-
-즉, README의 이 섹션을 복사해서 OpenClaw 에이전트에게 전달하면 좋고,
-필요하면 에이전트별 workspace 경로만 알맞게 바꿔서 보내면 됩니다.
 
 ---
 
@@ -419,7 +413,7 @@ crontab 등록:
 
 ### 재시작이 필요할 가능성이 높은 경우
 - OpenClaw 코어에 직접 tool/plugin으로 등록하는 경우
-- 기존 `memory_search`를 OpenClaw 내부에서 직접 대체하는 경우
+- 기존 OpenClaw 기본 메모리 회상 기능을 내부에서 직접 대체하는 경우
 - gateway config, plugin registry, tool registry 변경이 필요한 경우
 
 ---
