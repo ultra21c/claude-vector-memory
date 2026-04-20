@@ -1,0 +1,40 @@
+[project]
+name = "claude-vector-memory"
+version = "0.1.0"
+description = "SQLite + FTS5 + vector search index over markdown memory files. Keeps markdown as source of truth, builds a hybrid-ranked queryable index."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "sqlite-vec>=0.1.9",
+]
+
+[project.optional-dependencies]
+# Neural embeddings (recommended — best quality)
+neural = [
+    "sentence-transformers>=5.0.0",
+    "numpy>=1.24.0",
+]
+# OpenAI embeddings
+openai = [
+    "requests>=2.28.0",
+]
+# All optional dependencies
+all = [
+    "sentence-transformers>=5.0.0",
+    "numpy>=1.24.0",
+    "requests>=2.28.0",
+]
+
+[project.scripts]
+memory-index = "claude_vector_memory.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claude_vector_memory"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/claude_vector_memory", "README.md", "LICENSE"]
