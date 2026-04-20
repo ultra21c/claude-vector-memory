@@ -46,53 +46,87 @@ DB는 언제든 다시 만들 수 있는 인덱스일 뿐입니다.
 
 ---
 
-## 3. 설치
+## 3. 설치 방식 이해하기
 
-### 3-1. 일반 설치
+이 프로젝트는 두 가지 방식으로 사용할 수 있습니다.
 
-```bash
-pip install claude-vector-memory
-```
+### 방식 A. 패키지 사용자 방식
 
-기본 설치는 최소 구성입니다.
-
-### 3-2. 최고 품질 검색용 설치 (권장)
-
-로컬 neural embedding + reranking까지 사용하려면 다음을 권장합니다.
+배포된 패키지를 설치해서 사용하는 방법입니다.
 
 ```bash
 pip install "claude-vector-memory[neural]"
 ```
 
-### 3-3. OpenAI 임베딩 사용
+이 방식은 **일반 사용자용**입니다.
+설치가 끝나면 `memory-index`라는 CLI 명령을 사용할 수 있습니다.
+
+예:
 
 ```bash
-pip install "claude-vector-memory[openai]"
+memory-index --help
 ```
 
-### 3-4. 모든 옵션 설치
+### 방식 B. 소스 체크아웃 + uv 방식
 
-```bash
-pip install "claude-vector-memory[all]"
-```
-
-### 3-5. 소스에서 설치
+repo를 clone해서 직접 사용하는 방법입니다.
 
 ```bash
 git clone <repo-url>
 cd claude-vector-memory
-pip install -e ".[all]"
+uv sync --all-extras
 ```
 
-또는 `uv`를 사용한다면:
+이 방식은 **개발자 / 로컬 수정 / 테스트용**입니다.
+이 경우에는 보통 아래처럼 실행합니다.
 
 ```bash
-uv sync --all-extras
+uv run memory-index --help
+```
+
+즉,
+- 패키지 설치 사용자 → `memory-index ...`
+- 소스 repo 사용자 → `uv run memory-index ...`
+
+로 이해하시면 됩니다.
+
+---
+
+## 4. extras 문법 설명: `[neural]`, `[openai]`, `[all]`
+
+Python 패키지 설치에서 `[neural]` 같은 표기는 **optional dependencies(extras)** 를 의미합니다.
+
+예를 들어:
+
+```bash
+pip install "claude-vector-memory[neural]"
+```
+
+이건 `claude-vector-memoryneural` 같은 뜻이 아닙니다.
+의미는 다음과 같습니다.
+
+- 기본 패키지 `claude-vector-memory` 설치
+- 추가로 `neural` 그룹에 정의된 의존성도 같이 설치
+
+현재 extras 의미:
+- `[neural]`
+  - local neural embedding + reranking용 의존성 설치
+- `[openai]`
+  - OpenAI 임베딩용 의존성 설치
+- `[all]`
+  - 모든 optional dependency 설치
+
+예:
+
+```bash
+pip install "claude-vector-memory[neural]"
+pip install "claude-vector-memory[openai]"
+pip install "claude-vector-memory[all]"
 ```
 
 ---
 
-## 4. 권장 검색 품질 모드
+## 5. 권장 검색 품질 모드
 
 현재 기준 최고 품질 모드는 다음입니다.
 
@@ -101,27 +135,39 @@ uv sync --all-extras
 - hybrid retrieval
 - cross-encoder reranking
 
-즉, 가장 권장되는 설치는 보통 아래입니다.
+즉 가장 권장되는 설치는 보통 아래 둘 중 하나입니다.
+
+### 패키지 설치 사용자
 
 ```bash
 pip install "claude-vector-memory[neural]"
 ```
 
-또는 개발 환경에서는:
+### repo를 clone해서 직접 사용하는 사용자
 
 ```bash
 uv sync --all-extras
 ```
 
+차이점:
+- `pip install "claude-vector-memory[neural]"`
+  - 일반 사용자용
+  - 설치 후 `memory-index` 명령 사용
+- `uv sync --all-extras`
+  - repo 개발/수정/로컬 테스트용
+  - 보통 `uv run memory-index` 사용
+
 ---
 
-# 5. Getting Started
+# 6. Getting Started
 
-이 섹션은 **처음 설치해서 실제로 동작시키는 가장 쉬운 순서**를 step by step으로 설명합니다.
+이 섹션은 **실제로 그대로 따라 하면 설치와 설정이 끝나는 형태**로 작성되어 있습니다.
+
+---
 
 ## Step 1. 메모리 파일 구조 준비
 
-예를 들어 아래와 같은 구조가 있다고 가정합니다.
+기본적으로 아래와 같은 구조를 준비합니다.
 
 ```text
 my-agent/
@@ -137,83 +183,297 @@ my-agent/
 - `memory/*.md` 는 일일 메모리 또는 세부 메모리
 - DB 파일은 직접 편집하지 않음
 
-## Step 2. 최고 품질 모드 설치
+---
+
+## Step 2. 설치 방식 선택
+
+### 2-A. 일반 사용자 방식 (권장)
+
+패키지를 설치합니다.
 
 ```bash
+pip install "claude-vector-memory[neural]"
+```
+
+설치가 끝나면 아래 명령이 동작해야 합니다.
+
+```bash
+memory-index --help
+```
+
+### 2-B. repo를 clone해서 직접 사용하는 방식
+
+```bash
+git clone <repo-url>
 cd claude-vector-memory
 uv sync --all-extras
 ```
 
-이렇게 하면
-- sqlite-vec
-- local neural embedding
-- reranker
-까지 설치됩니다.
-
-## Step 3. 최초 인덱스 생성
+설치가 끝나면 아래 명령이 동작해야 합니다.
 
 ```bash
-uv run memory-index \
-  --source ./memory \
-  --index-file ./MEMORY.md \
-  rebuild
+uv run memory-index --help
 ```
-
-`rebuild`는 전체 인덱스를 처음부터 다시 만듭니다.
-보통은 다음 상황에서 사용합니다.
-- 처음 설치할 때
-- provider를 바꿨을 때
-- 인덱스 구조가 바뀌었을 때
-
-## Step 4. 상태 점검
-
-```bash
-uv run memory-index \
-  --source ./memory \
-  --index-file ./MEMORY.md \
-  doctor
-```
-
-여기서
-- sqlite-vec
-- embedding provider
-- reranker
-- freshness
-등이 정상인지 확인할 수 있습니다.
-
-## Step 5. 검색 테스트
-
-```bash
-uv run memory-index \
-  --source ./memory \
-  --index-file ./MEMORY.md \
-  search "위험 관리 교훈"
-```
-
-또는 영어 질의도 테스트해볼 수 있습니다.
-
-```bash
-uv run memory-index \
-  --source ./memory \
-  --index-file ./MEMORY.md \
-  search "mistakes that cost money"
-```
-
-## Step 6. 이후 일상 운영은 sync 사용
-
-```bash
-uv run memory-index \
-  --source ./memory \
-  --index-file ./MEMORY.md \
-  sync
-```
-
-일상 운영에서는 `rebuild`보다 `sync`를 쓰는 것이 맞습니다.
-`sync`는 변경된 파일만 반영합니다.
 
 ---
 
-## 6. 파일 기반 메모리 시스템에서 사용하는 방법
+## Step 3. 싱글 에이전트 설정
+
+예를 들어 `coding_agent` 하나만 있다고 가정하겠습니다.
+
+```text
+~/.openclaw/workspace-coding_agent/
+├── MEMORY.md
+├── memory/
+│   ├── 2026-04-19.md
+│   └── lessons.md
+└── .memory_index.db
+```
+
+### 패키지 설치 방식일 때
+
+최초 인덱스 생성:
+
+```bash
+memory-index \
+  --source ~/.openclaw/workspace-coding_agent/memory \
+  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
+  rebuild
+```
+
+상태 점검:
+
+```bash
+memory-index \
+  --source ~/.openclaw/workspace-coding_agent/memory \
+  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
+  doctor
+```
+
+검색 테스트:
+
+```bash
+memory-index \
+  --source ~/.openclaw/workspace-coding_agent/memory \
+  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
+  search "deployment rule"
+```
+
+일상 운영:
+
+```bash
+memory-index \
+  --source ~/.openclaw/workspace-coding_agent/memory \
+  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
+  sync
+```
+
+### repo + uv 방식일 때
+
+최초 인덱스 생성:
+
+```bash
+uv run memory-index \
+  --source ~/.openclaw/workspace-coding_agent/memory \
+  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
+  rebuild
+```
+
+상태 점검:
+
+```bash
+uv run memory-index \
+  --source ~/.openclaw/workspace-coding_agent/memory \
+  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
+  doctor
+```
+
+검색 테스트:
+
+```bash
+uv run memory-index \
+  --source ~/.openclaw/workspace-coding_agent/memory \
+  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
+  search "deployment rule"
+```
+
+일상 운영:
+
+```bash
+uv run memory-index \
+  --source ~/.openclaw/workspace-coding_agent/memory \
+  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
+  sync
+```
+
+---
+
+## Step 4. 멀티 에이전트 설정
+
+가장 안전한 권장 방식은 다음입니다.
+
+- 메모리 엔진은 공용
+- 메모리 원본 파일은 에이전트별 분리
+- DB 파일도 에이전트별 분리
+
+예시:
+
+```text
+~/.openclaw/
+├── workspace-coding_agent/
+│   ├── MEMORY.md
+│   ├── memory/
+│   └── .memory_index.db
+│
+├── workspace-research_agent/
+│   ├── MEMORY.md
+│   ├── memory/
+│   └── .memory_index.db
+│
+└── workspace-support_agent/
+    ├── MEMORY.md
+    ├── memory/
+    └── .memory_index.db
+```
+
+### 패키지 설치 방식일 때
+
+```bash
+# coding_agent
+memory-index \
+  --source ~/.openclaw/workspace-coding_agent/memory \
+  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
+  rebuild
+
+# research_agent
+memory-index \
+  --source ~/.openclaw/workspace-research_agent/memory \
+  --index-file ~/.openclaw/workspace-research_agent/MEMORY.md \
+  rebuild
+
+# support_agent
+memory-index \
+  --source ~/.openclaw/workspace-support_agent/memory \
+  --index-file ~/.openclaw/workspace-support_agent/MEMORY.md \
+  rebuild
+```
+
+이후 일상 운영:
+
+```bash
+memory-index \
+  --source ~/.openclaw/workspace-coding_agent/memory \
+  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
+  sync
+
+memory-index \
+  --source ~/.openclaw/workspace-research_agent/memory \
+  --index-file ~/.openclaw/workspace-research_agent/MEMORY.md \
+  sync
+```
+
+### repo + uv 방식일 때
+
+```bash
+uv run memory-index \
+  --source ~/.openclaw/workspace-coding_agent/memory \
+  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
+  rebuild
+
+uv run memory-index \
+  --source ~/.openclaw/workspace-research_agent/memory \
+  --index-file ~/.openclaw/workspace-research_agent/MEMORY.md \
+  rebuild
+
+uv run memory-index \
+  --source ~/.openclaw/workspace-support_agent/memory \
+  --index-file ~/.openclaw/workspace-support_agent/MEMORY.md \
+  rebuild
+```
+
+---
+
+## Step 5. OpenClaw에 연결
+
+이 프로젝트는 OpenClaw 코어를 직접 수정하지 않고도 사용할 수 있습니다.
+
+### 방법 A. 수동 호출
+
+에이전트가 필요할 때마다 아래처럼 실행합니다.
+
+```bash
+memory-index --source <agent-memory-dir> --index-file <agent-memory-md> sync
+memory-index --source <agent-memory-dir> --index-file <agent-memory-md> search "query"
+```
+
+### 방법 B. hook 또는 wrapper에 연결
+
+예:
+
+```bash
+#!/usr/bin/env bash
+AGENT_ID="${OPENCLAW_AGENT_ID:-main}"
+SOURCE_DIR="$HOME/.openclaw/workspace-${AGENT_ID}/memory"
+INDEX_FILE="$HOME/.openclaw/workspace-${AGENT_ID}/MEMORY.md"
+
+if [ -d "$SOURCE_DIR" ]; then
+  memory-index --source "$SOURCE_DIR" --index-file "$INDEX_FILE" --quiet sync
+fi
+```
+
+예제 파일:
+- `examples/openclaw_hook.sh`
+- `examples/openclaw_integration.py`
+
+---
+
+## Step 6. 에이전트 운영 규칙 적용
+
+이 프로젝트를 설치했다고 해서 에이전트가 자동으로 새 메모리 시스템을 우선 사용하게 되지는 않습니다.
+
+실제 운영에서는 아래 규칙을 적용하는 것을 권장합니다.
+
+### 권장 운영 규칙
+
+메모리 회상, 과거 결정, 사용자 선호, 작업 이력, 규칙, 교훈 등을 찾아야 할 때는 **기존 file-based memory 검색보다 `claude-vector-memory`를 우선 사용**하세요.
+
+기본 원칙:
+1. 메모리 관련 질문이 들어오면 먼저 해당 에이전트 workspace 기준으로 `claude-vector-memory` 검색을 수행할 것
+2. 가능하면 검색 전에 `sync`를 먼저 실행해 최신 상태를 반영할 것
+3. 우선 `search` 또는 `retrieve` 결과를 기준으로 회상할 것
+4. 결과가 약하거나 확신이 낮을 때만 기존 `memory_search`, `memory_get`를 보조적으로 사용할 것
+5. 최종 답변은 항상 자기 에이전트의 메모리 범위 안에서만 수행할 것
+6. 멀티 에이전트 환경에서는 다른 에이전트 메모리와 섞지 말 것
+
+짧은 버전:
+- 메모리 회상은 앞으로 **`claude-vector-memory` 우선**
+- 먼저 `sync`
+- 그 다음 `search` 또는 `retrieve`
+- 기존 `memory_search`는 fallback
+- 다른 에이전트 메모리와 섞지 말 것
+
+---
+
+## Step 7. Gateway restart가 필요한가?
+
+대부분의 경우 **재시작은 필요 없습니다.**
+
+### 재시작이 필요 없는 경우
+- `claude-vector-memory`를 외부 독립 CLI / Python 라이브러리로 설치해서 사용하는 경우
+- `memory-index sync`, `memory-index search` 같은 명령을 직접 호출하는 경우
+- OpenClaw hook, wrapper, agent 운영 규칙에서 이 프로젝트를 호출하는 경우
+- AGENTS.md / SOUL.md / 운영 프롬프트에 "vector memory를 우선 사용" 규칙만 추가하는 경우
+
+즉, 현재 README에서 설명하는 일반적인 사용 방식은 **OpenClaw Gateway restart 없이 바로 적용 가능**합니다.
+
+### 재시작이 필요할 가능성이 높은 경우
+- OpenClaw 코어에 직접 tool/plugin으로 등록하는 경우
+- 기존 `memory_search`를 OpenClaw 내부에서 직접 대체하는 경우
+- gateway config, plugin registry, tool registry 변경이 필요한 경우
+
+---
+
+## 7. 파일 기반 메모리 시스템에서 사용하는 방법
 
 이 프로젝트는 **특정 OpenClaw 전용 구조만 요구하지 않습니다.**
 기본적으로는 Markdown 파일이 있는 어떤 디렉토리든 인덱싱할 수 있습니다.
@@ -245,225 +505,21 @@ Chunking 규칙:
 
 ---
 
-## 7. OpenClaw에 적용하는 방법
-
-이 프로젝트는 OpenClaw 본체 코드와 분리된 독립 프로젝트입니다.
-즉 OpenClaw 내부 기능을 직접 수정하지 않고도 사용할 수 있습니다.
-
-적용 방식은 크게 두 가지입니다.
-
-### 7-1. 수동/명시적 호출 방식
-
-에이전트가 필요할 때 다음 명령을 실행하게 합니다.
-
-```bash
-memory-index --source <agent-memory-dir> --index-file <agent-memory-md> sync
-memory-index --source <agent-memory-dir> --index-file <agent-memory-md> search "query"
-```
-
-이 방식의 장점:
-- 가장 단순함
-- OpenClaw 코어 수정 불필요
-- 운영 이해가 쉬움
-
-### 7-2. Hook 또는 wrapper를 통한 자동 동기화
-
-에이전트 메시지 처리 전후에 `sync`를 걸 수 있습니다.
-예를 들어 OpenClaw hook에서:
-
-```bash
-#!/usr/bin/env bash
-AGENT_ID="${OPENCLAW_AGENT_ID:-main}"
-SOURCE_DIR="$HOME/.openclaw/workspace-${AGENT_ID}/memory"
-INDEX_FILE="$HOME/.openclaw/workspace-${AGENT_ID}/MEMORY.md"
-
-if [ -d "$SOURCE_DIR" ]; then
-  memory-index --source "$SOURCE_DIR" --index-file "$INDEX_FILE" --quiet sync
-fi
-```
-
-프로젝트 안에 예제로 다음 파일이 포함되어 있습니다.
-- `examples/openclaw_hook.sh`
-- `examples/openclaw_integration.py`
-
-이 예제들을 기반으로 OpenClaw 작업 흐름에 붙이면 됩니다.
-
----
-
-## 8. 싱글 에이전트 설정 방법
-
-가장 단순한 구조는 **에이전트 1개 + 메모리 디렉토리 1개 + DB 1개**입니다.
-
-예시:
-
-```text
-~/.openclaw/workspace-coding_agent/
-├── MEMORY.md
-├── memory/
-│   ├── 2026-04-19.md
-│   └── lessons.md
-└── .memory_index.db
-```
-
-CLI 예시:
-
-```bash
-memory-index \
-  --source ~/.openclaw/workspace-coding_agent/memory \
-  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
-  sync
-
-memory-index \
-  --source ~/.openclaw/workspace-coding_agent/memory \
-  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
-  search "deployment rule"
-```
-
-Python 예시:
+## 8. Python API 사용 예시
 
 ```python
 from claude_vector_memory import MemoryIndex
 
-with MemoryIndex(
-    source_dir="/Users/you/.openclaw/workspace-coding_agent/memory",
-    index_file="/Users/you/.openclaw/workspace-coding_agent/MEMORY.md",
-) as idx:
+with MemoryIndex(source_dir="./memory", index_file="./MEMORY.md") as idx:
     idx.sync()
-    print(idx.retrieve("previous deployment decisions"))
+    results = idx.search("SL bug", limit=5)
+    context = idx.retrieve("위험 관리 관련 실수")
+    print(context)
 ```
-
-추가 예제는 다음 파일을 참고하면 됩니다.
-- `examples/single_agent.py`
 
 ---
 
-## 9. 멀티 에이전트 설정 방법
-
-가장 안전한 권장 방식은 다음입니다.
-
-### 권장 구조: 공용 엔진 + 에이전트별 source path + 에이전트별 DB 파일
-
-즉,
-- 코드는 공용
-- 메모리 원본 파일은 에이전트별로 분리
-- DB 파일도 에이전트별로 분리
-
-예시:
-
-```text
-~/.openclaw/
-├── workspace-coding_agent/
-│   ├── MEMORY.md
-│   ├── memory/
-│   └── .memory_index.db
-│
-├── workspace-research_agent/
-│   ├── MEMORY.md
-│   ├── memory/
-│   └── .memory_index.db
-│
-└── workspace-support_agent/
-    ├── MEMORY.md
-    ├── memory/
-    └── .memory_index.db
-```
-
-왜 이 방식이 안전한가:
-- 에이전트 간 메모리 혼선 방지
-- DB write conflict 방지
-- 필터 누락으로 다른 에이전트 메모리가 섞이는 위험 감소
-- 디버깅이 쉬움
-- 각 에이전트 DB를 독립적으로 rebuild 가능
-
-CLI 예시:
-
-```bash
-# coding_agent
-memory-index \
-  --source ~/.openclaw/workspace-coding_agent/memory \
-  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
-  sync
-
-# research_agent
-memory-index \
-  --source ~/.openclaw/workspace-research_agent/memory \
-  --index-file ~/.openclaw/workspace-research_agent/MEMORY.md \
-  sync
-```
-
-Python 예시:
-
-```python
-from pathlib import Path
-from claude_vector_memory import MemoryIndex
-
-agents = {
-    "coding_agent": Path.home() / ".openclaw/workspace-coding_agent/memory",
-    "research_agent": Path.home() / ".openclaw/workspace-research_agent/memory",
-    "support_agent": Path.home() / ".openclaw/workspace-support_agent/memory",
-}
-
-for agent_id, source_dir in agents.items():
-    index_file = source_dir.parent / "MEMORY.md"
-    with MemoryIndex(source_dir=source_dir, index_file=index_file, quiet=True) as idx:
-        idx.sync()
-        print(agent_id, idx.stats())
-```
-
-멀티 에이전트 예제는 다음 파일을 참고하면 됩니다.
-- `examples/multi_agent.py`
-
----
-
-## 10. OpenClaw 멀티 에이전트에서의 권장 운영 방식
-
-멀티 에이전트 환경에서는 추천 운영 방식이 명확합니다.
-
-### 가장 안전한 1안
-- 메모리 엔진 패키지는 공용 설치
-- 각 에이전트는 자기 workspace의 `MEMORY.md`, `memory/`만 사용
-- 각 에이전트는 자기 `.memory_index.db`만 사용
-
-즉,
-- **공용 엔진**
-- **에이전트별 소스 경로 분리**
-- **에이전트별 DB 파일 분리**
-
-이 구조가 현재 기준 가장 안전합니다.
-
----
-
-## 11. 에이전트 운영 규칙, vector search를 우선 사용하려면
-
-이 프로젝트를 설치했다고 해서 에이전트가 자동으로 새 메모리 시스템을 우선 사용하게 되지는 않습니다.
-
-즉, 실제 운영에서는 **에이전트에게 메모리 회상 규칙을 따로 적용**하는 것이 좋습니다.
-
-### 권장 운영 규칙
-
-메모리 회상, 과거 결정, 사용자 선호, 작업 이력, 규칙, 교훈 등을 찾아야 할 때는 **기존 file-based memory 검색보다 `claude-vector-memory`를 우선 사용**하세요.
-
-기본 원칙:
-1. 메모리 관련 질문이 들어오면 먼저 해당 에이전트 workspace 기준으로 `claude-vector-memory` 검색을 수행할 것
-2. 가능하면 검색 전에 `sync`를 먼저 실행해 최신 상태를 반영할 것
-3. 우선 `search` 또는 `retrieve` 결과를 기준으로 회상할 것
-4. 결과가 약하거나 확신이 낮을 때만 기존 `memory_search`, `memory_get`를 보조적으로 사용할 것
-5. 최종 답변은 항상 자기 에이전트의 메모리 범위 안에서만 수행할 것
-6. 멀티 에이전트 환경에서는 다른 에이전트 메모리와 섞지 말 것
-
-### 짧은 운영 규칙 버전
-
-- 메모리 회상은 앞으로 **`claude-vector-memory` 우선**
-- 먼저 `sync`
-- 그 다음 `search` 또는 `retrieve`
-- 기존 `memory_search`는 fallback
-- 다른 에이전트 메모리와 섞지 말 것
-
-이 규칙을 agent prompt, SOUL/AGENTS 문서, wrapper script, 또는 OpenClaw hook에 반영하면 됩니다.
-
----
-
-## 12. 주요 명령어
+## 9. 주요 명령어
 
 ### sync
 변경된 파일만 반영합니다. 일상 운영에서 가장 자주 쓰는 명령입니다.
@@ -517,97 +573,7 @@ memory-index --source ./memory --index-file ./MEMORY.md verify
 
 ---
 
-## 13. 추천 워크플로우
-
-### 일상 운영
-
-```bash
-memory-index --source ./memory --index-file ./MEMORY.md sync
-memory-index --source ./memory --index-file ./MEMORY.md search "your query"
-```
-
-### 상태 점검
-
-```bash
-memory-index --source ./memory --index-file ./MEMORY.md doctor
-```
-
-### 구조 변경/모델 변경 후
-
-```bash
-memory-index --source ./memory --index-file ./MEMORY.md rebuild
-```
-
----
-
-## 14. 환경 변수 / provider 선택
-
-일반적으로는 neural 설치가 되어 있으면 local provider가 가장 좋습니다.
-
-기본 provider 선택은 구현 상태에 따라 다음 중 하나를 사용할 수 있습니다.
-- `local`
-- `openai`
-- `tfidf`
-- `auto`
-
-예시:
-
-```bash
-export MEMORY_EMBEDDING_PROVIDER=local
-```
-
-OpenAI 사용 시:
-
-```bash
-export MEMORY_EMBEDDING_PROVIDER=openai
-export OPENAI_API_KEY=sk-...
-```
-
-가장 권장되는 기본값은 보통 `local` 또는 `auto`입니다.
-
----
-
-## 15. OpenClaw에서 plugin처럼 사용하는 방법
-
-현재 이 프로젝트는 OpenClaw 코어 안에 직접 포함된 공식 플러그인이라기보다,
-**OpenClaw와 함께 사용할 수 있는 독립형 설치 프로젝트**입니다.
-
-즉 현실적인 사용 방식은 다음과 같습니다.
-
-1. 시스템에 `claude-vector-memory` 설치
-2. 각 에이전트 workspace에 대해 `sync/search/doctor/verify` 사용
-3. 필요 시 OpenClaw hook, wrapper, orchestration code에서 호출
-4. README와 examples에 있는 integration 예시를 기반으로 붙이기
-
-이 접근의 장점:
-- OpenClaw 코어 수정 최소화
-- 기존 file-based memory 시스템에도 적용 가능
-- 싱글 에이전트 / 멀티 에이전트 모두 같은 엔진 사용 가능
-
-### OpenClaw Gateway 재시작이 필요한가?
-
-대부분의 경우 **재시작은 필요 없습니다.**
-
-#### 재시작이 필요 없는 경우
-- `claude-vector-memory`를 외부 독립 CLI / Python 라이브러리로 설치해서 사용하는 경우
-- `memory-index sync`, `memory-index search` 같은 명령을 직접 호출하는 경우
-- OpenClaw hook, wrapper, agent 운영 규칙에서 이 프로젝트를 호출하는 경우
-- AGENTS.md / SOUL.md / 운영 프롬프트에 "vector memory를 우선 사용" 규칙만 추가하는 경우
-
-즉, 현재 README에서 설명하는 일반적인 사용 방식은 **OpenClaw Gateway restart 없이 바로 적용 가능**합니다.
-
-#### 재시작이 필요할 가능성이 높은 경우
-- OpenClaw 코어에 직접 tool/plugin으로 등록하는 경우
-- 기존 `memory_search`를 OpenClaw 내부에서 직접 대체하는 경우
-- gateway config, plugin registry, tool registry 변경이 필요한 경우
-
-요약하면,
-- **독립형 프로젝트로 사용하는 현재 방식은 restart 불필요**
-- **OpenClaw 내부 기능으로 깊게 통합하는 경우에는 restart 필요 가능성 높음**
-
----
-
-## 16. 포함된 예제 파일
+## 10. 포함된 예제 파일
 
 - `examples/single_agent.py`
   - 단일 에이전트 예제
@@ -620,7 +586,7 @@ export OPENAI_API_KEY=sk-...
 
 ---
 
-## 17. 주의사항
+## 11. 주의사항
 
 - DB 파일은 **원본 데이터가 아닙니다**
 - Markdown 메모리 파일이 원본입니다
@@ -630,7 +596,7 @@ export OPENAI_API_KEY=sk-...
 
 ---
 
-## 18. 요약
+## 12. 요약
 
 이 프로젝트는 다음을 위한 도구입니다.
 
