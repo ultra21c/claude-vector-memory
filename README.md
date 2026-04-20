@@ -187,21 +187,10 @@ my-agent/
 
 ## Step 2. 설치 방식 선택
 
-### 2-A. 일반 사용자 방식 (권장)
+현재 기준으로는 **GitHub/source 설치 방식이 기본**입니다.
+`pip install "claude-vector-memory[neural]"` 같은 명령은 **PyPI에 배포된 이후**에 사용하는 방식입니다.
 
-패키지를 설치합니다.
-
-```bash
-pip install "claude-vector-memory[neural]"
-```
-
-설치가 끝나면 아래 명령이 동작해야 합니다.
-
-```bash
-memory-index --help
-```
-
-### 2-B. repo를 clone해서 직접 사용하는 방식
+### 2-A. 권장 방식: repo를 clone해서 직접 사용하는 방식
 
 ```bash
 git clone <repo-url>
@@ -213,6 +202,44 @@ uv sync --all-extras
 
 ```bash
 uv run memory-index --help
+```
+
+이 방식이 가장 안전하고, README의 예제도 기본적으로 이 흐름을 기준으로 설명합니다.
+
+### 2-B. 선택 방식: Python 가상환경 + pip 설치
+
+가상환경 안에서 설치하려면 다음처럼 진행합니다.
+
+```bash
+git clone <repo-url>
+cd claude-vector-memory
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[neural]"
+```
+
+설치가 끝나면 아래 명령이 동작해야 합니다.
+
+```bash
+memory-index --help
+```
+
+주의:
+- macOS/Homebrew Python 환경에서는 시스템 Python에 직접 `pip install -e ...` 하면 PEP 668 때문에 막힐 수 있습니다
+- 따라서 일반적으로는 **`uv sync --all-extras` + `uv run memory-index ...` 방식이 더 안전**합니다
+
+### 2-C. PyPI 배포 후 사용할 방식
+
+향후 PyPI에 배포되면 아래처럼 설치할 수 있습니다.
+
+```bash
+pip install "claude-vector-memory[neural]"
+```
+
+그 경우 설치 후 다음처럼 실행합니다.
+
+```bash
+memory-index --help
 ```
 
 ---
