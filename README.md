@@ -362,89 +362,78 @@ crontab 등록:
 
 이 프로젝트를 설치했다고 해서 에이전트가 자동으로 새 메모리 시스템을 우선 사용하게 되지는 않습니다.
 
-따라서 다른 OpenClaw 에이전트에 적용할 때는, 단순히 "claude-vector-memory를 우선 사용하라"고만 말하면 부족합니다.
-먼저 아래 내용을 분명히 알려줘야 합니다.
+따라서 OpenClaw 에이전트에 적용할 때는, 아래 내용을 **그대로 복사해서 에이전트 지침에 넣는 방식**을 권장합니다.
 
-### 1. `claude-vector-memory`가 무엇인가
+### 복사해서 넣을 내용
 
-`claude-vector-memory`는 기존 `MEMORY.md`, `memory/*.md`를 그대로 원본으로 두고,
-그 위에 SQLite + vector search 기반 인덱스를 만들어 더 잘 회상하도록 돕는 독립형 메모리 검색 프로젝트입니다.
+```text
+1. claude-vector-memory가 무엇인가
+claude-vector-memory는 기존 MEMORY.md, memory/*.md를 그대로 원본으로 두고, 그 위에 SQLite + vector search 기반 인덱스를 만들어 더 잘 회상하도록 돕는 독립형 메모리 검색 프로젝트입니다.
 
-즉, 기존 파일 기반 메모리를 버리는 것이 아니라,
-**기존 메모리 파일을 더 잘 검색하고 회상하기 위한 보조 엔진**입니다.
+즉, 기존 파일 기반 메모리를 버리는 것이 아니라, 기존 메모리 파일을 더 잘 검색하고 회상하기 위한 보조 엔진입니다.
 
-### 2. 어디에 설치되어 있는가
-
+2. 어디에 설치되어 있는가
 OpenClaw 에이전트는 먼저 이 프로젝트가 로컬 어디에 설치되어 있는지 알아야 합니다.
 
 예:
-
-```text
 /Users/lucas/working/claude-vector-memory
-```
 
-### 3. 어떻게 실행하는가
-
+3. 어떻게 실행하는가
 이 프로젝트는 현재 source 설치 방식만 사용하므로, 보통 아래처럼 실행합니다.
 
-```bash
 cd /Users/lucas/working/claude-vector-memory
 uv run memory-index ...
-```
 
-즉 에이전트는 메모리 회상이 필요할 때,
-이 프로젝트 디렉토리에서 `uv run memory-index`를 호출해야 합니다.
+즉 에이전트는 메모리 회상이 필요할 때, 이 프로젝트 디렉토리에서 uv run memory-index를 호출해야 합니다.
 
-### 4. 검색 시 어떤 흐름으로 써야 하는가
-
+4. 검색 시 어떤 흐름으로 써야 하는가
 메모리 회상 시 기본 흐름은 다음과 같습니다.
 
-1. 먼저 해당 에이전트 workspace 기준으로 `sync`
-2. 그 다음 `search` 또는 `retrieve`
-3. 결과가 충분하면 그 결과를 기준으로 회상
-4. 결과가 약하거나 확신이 낮을 때만 기존 OpenClaw 기본 메모리 회상 방식을 보조적으로 사용
+먼저 해당 에이전트 workspace 기준으로 sync
+그 다음 search 또는 retrieve
+결과가 충분하면 그 결과를 기준으로 회상
+결과가 약하거나 확신이 낮을 때만 기존 OpenClaw 기본 메모리 회상 방식을 보조적으로 사용
 
 예:
-
-```bash
 cd /Users/lucas/working/claude-vector-memory
 uv run memory-index \
-  --source <workspace>/memory \
-  --index-file <workspace>/MEMORY.md \
-  sync
+ --source <workspace>/memory \
+ --index-file <workspace>/MEMORY.md \
+ sync
 
 uv run memory-index \
-  --source <workspace>/memory \
-  --index-file <workspace>/MEMORY.md \
-  search "query"
-```
+ --source <workspace>/memory \
+ --index-file <workspace>/MEMORY.md \
+ search "query"
 
-### 5. 운영 규칙
-
-메모리 회상, 과거 결정, 사용자 선호, 작업 이력, 규칙, 교훈 등을 찾아야 할 때는 **기존 file-based memory 검색보다 `claude-vector-memory`를 우선 사용**하세요.
+5. 운영 규칙
+메모리 회상, 과거 결정, 사용자 선호, 작업 이력, 규칙, 교훈 등을 찾아야 할 때는 기존 file-based memory 검색보다 claude-vector-memory를 우선 사용하세요.
 
 기본 원칙:
-1. 메모리 관련 질문이 들어오면 먼저 해당 에이전트 workspace 기준으로 `claude-vector-memory` 검색을 수행할 것
-2. 가능하면 검색 전에 `sync`를 먼저 실행해 최신 상태를 반영할 것
-3. 우선 `search` 또는 `retrieve` 결과를 기준으로 회상할 것
-4. 결과가 약하거나 확신이 낮을 때만 기존 OpenClaw 기본 메모리 회상 방식을 보조적으로 사용할 것
-5. 최종 답변은 항상 자기 에이전트의 메모리 범위 안에서만 수행할 것
-6. 멀티 에이전트 환경에서는 다른 에이전트 메모리와 섞지 말 것
+메모리 관련 질문이 들어오면 먼저 해당 에이전트 workspace 기준으로 claude-vector-memory 검색을 수행할 것
+가능하면 검색 전에 sync를 먼저 실행해 최신 상태를 반영할 것
+우선 search 또는 retrieve 결과를 기준으로 회상할 것
+결과가 약하거나 확신이 낮을 때만 기존 OpenClaw 기본 메모리 회상 방식을 보조적으로 사용할 것
+최종 답변은 항상 자기 에이전트의 메모리 범위 안에서만 수행할 것
+멀티 에이전트 환경에서는 다른 에이전트 메모리와 섞지 말 것
 
 짧은 버전:
-- 메모리 회상은 앞으로 **`claude-vector-memory` 우선**
-- 먼저 `sync`
-- 그 다음 `search` 또는 `retrieve`
-- 기존 OpenClaw 기본 메모리 회상 방식은 fallback
-- 다른 에이전트 메모리와 섞지 말 것
+메모리 회상은 앞으로 claude-vector-memory 우선
+먼저 sync
+그 다음 search 또는 retrieve
+기존 OpenClaw 기본 메모리 회상 방식은 fallback
+다른 에이전트 메모리와 섞지 말 것
 
-### 6. 경로 규칙
+6. 경로 규칙
+프로젝트 위치를 먼저 알려줄 것
+실행은 cd <claude-vector-memory 설치 경로> && uv run memory-index ... 방식으로 할 것
+--source <workspace>/memory
+--index-file <workspace>/MEMORY.md
+두 경로는 반드시 같은 workspace 루트 아래여야 함
+```
 
-- 프로젝트 위치를 먼저 알려줄 것
-- 실행은 `cd <claude-vector-memory 설치 경로> && uv run memory-index ...` 방식으로 할 것
-- `--source <workspace>/memory`
-- `--index-file <workspace>/MEMORY.md`
-- 두 경로는 반드시 같은 workspace 루트 아래여야 함
+위 블록은 OpenClaw 에이전트 지침에 그대로 복사해서 넣는 용도로 작성되었습니다.
+필요하면 설치 경로(`/Users/lucas/working/claude-vector-memory`)만 자신의 환경에 맞게 바꿔서 사용하면 됩니다.
 
 ---
 
