@@ -46,25 +46,18 @@ DB는 언제든 다시 만들 수 있는 인덱스일 뿐입니다.
 
 ---
 
-## 3. 설치 방식 이해하기
+## 3. 설치 방식
 
 이 프로젝트는 **GitHub/source 설치 방식만 사용**합니다.
 PyPI 배포를 전제로 하지 않으며, 패키지 저장소에서 설치하는 방식은 지원하지 않습니다.
 
 권장 설치 방식은 다음 하나입니다.
 
-### 권장 방식: 소스 체크아웃 + uv
-
-repo를 clone해서 직접 사용하는 방법입니다.
-
 ```bash
 git clone <repo-url>
 cd claude-vector-memory
 uv sync --all-extras
 ```
-
-이 방식이 가장 안전하고 간단합니다.
-또한 README의 모든 예시는 이 설치 방식을 기준으로 설명합니다.
 
 주의:
 - macOS/Homebrew Python 환경에서는 시스템 Python에 직접 설치하는 방식이 막힐 수 있습니다
@@ -92,7 +85,7 @@ uv sync --all-extras
 
 ---
 
-# 6. Getting Started
+# 5. Getting Started
 
 이 섹션은 **실제로 그대로 따라 하면 설치와 설정이 끝나는 형태**로 작성되어 있습니다.
 
@@ -118,12 +111,7 @@ my-agent/
 
 ---
 
-## Step 2. 설치 방식 선택
-
-현재 기준으로는 **GitHub/source 설치 방식이 기본**입니다.
-`pip install "claude-vector-memory[neural]"` 같은 명령은 **PyPI에 배포된 이후**에 사용하는 방식입니다.
-
-### 2-A. 권장 방식: repo를 clone해서 직접 사용하는 방식
+## Step 2. 설치
 
 ```bash
 git clone <repo-url>
@@ -131,42 +119,12 @@ cd claude-vector-memory
 uv sync --all-extras
 ```
 
-이 방식이 가장 안전하고, README의 예제도 기본적으로 이 흐름을 기준으로 설명합니다.
+설치 후 모든 명령은 **`uv run memory-index ...`** 형태로 실행합니다.
 
-### 2-B. 선택 방식: Python 가상환경 + pip 설치
-
-가상환경 안에서 설치하려면 다음처럼 진행합니다.
+예:
 
 ```bash
-git clone <repo-url>
-cd claude-vector-memory
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[neural]"
-```
-
-설치가 끝나면 아래 명령이 동작해야 합니다.
-
-```bash
-memory-index --help
-```
-
-주의:
-- macOS/Homebrew Python 환경에서는 시스템 Python에 직접 `pip install -e ...` 하면 PEP 668 때문에 막힐 수 있습니다
-- 따라서 일반적으로는 **`uv sync --all-extras` + `uv run memory-index ...` 방식이 더 안전**합니다
-
-### 2-C. PyPI 배포 후 사용할 방식
-
-향후 PyPI에 배포되면 아래처럼 설치할 수 있습니다.
-
-```bash
-pip install "claude-vector-memory[neural]"
-```
-
-그 경우 설치 후 다음처럼 실행합니다.
-
-```bash
-memory-index --help
+uv run memory-index --help
 ```
 
 ---
@@ -281,6 +239,8 @@ uv run memory-index \
 
 이처럼 `agents/...` 경로와 `workspace-...` 경로를 섞으면 인덱싱 중 경로 계산 오류가 발생할 수 있습니다.
 
+최초 인덱스 생성:
+
 ```bash
 uv run memory-index \
   --source ~/.openclaw/workspace-coding_agent/memory \
@@ -298,6 +258,20 @@ uv run memory-index \
   rebuild
 ```
 
+이후 일상 운영:
+
+```bash
+uv run memory-index \
+  --source ~/.openclaw/workspace-coding_agent/memory \
+  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
+  sync
+
+uv run memory-index \
+  --source ~/.openclaw/workspace-research_agent/memory \
+  --index-file ~/.openclaw/workspace-research_agent/MEMORY.md \
+  sync
+```
+
 ---
 
 ## Step 5. OpenClaw에 연결
@@ -309,8 +283,8 @@ uv run memory-index \
 에이전트가 필요할 때마다 아래처럼 실행합니다.
 
 ```bash
-memory-index --source <agent-memory-dir> --index-file <agent-memory-md> sync
-memory-index --source <agent-memory-dir> --index-file <agent-memory-md> search "query"
+uv run memory-index --source <agent-memory-dir> --index-file <agent-memory-md> sync
+uv run memory-index --source <agent-memory-dir> --index-file <agent-memory-md> search "query"
 ```
 
 ### 방법 B. hook 또는 wrapper에 연결
@@ -324,7 +298,7 @@ SOURCE_DIR="$HOME/.openclaw/workspace-${AGENT_ID}/memory"
 INDEX_FILE="$HOME/.openclaw/workspace-${AGENT_ID}/MEMORY.md"
 
 if [ -d "$SOURCE_DIR" ]; then
-  memory-index --source "$SOURCE_DIR" --index-file "$INDEX_FILE" --quiet sync
+  uv run memory-index --source "$SOURCE_DIR" --index-file "$INDEX_FILE" --quiet sync
 fi
 ```
 
@@ -334,7 +308,57 @@ fi
 
 ---
 
-## Step 6. 에이전트 운영 규칙 적용
+## Step 6. crontab으로 자동 sync 설정
+
+메모리 파일이 자주 바뀌는 환경에서는 cron으로 주기적으로 `sync`를 돌리는 것이 실용적입니다.
+
+### 단일 에이전트 예시, 10분마다 sync
+
+```bash
+*/10 * * * * cd /path/to/claude-vector-memory && uv run memory-index --source ~/.openclaw/workspace-coding_agent/memory --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md sync >/tmp/coding-agent-memory-sync.log 2>&1
+```
+
+### 여러 에이전트를 함께 sync하는 스크립트 예시
+
+예를 들어 `sync-all-memory.sh`:
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+cd /path/to/claude-vector-memory
+
+uv run memory-index \
+  --source ~/.openclaw/workspace-coding_agent/memory \
+  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
+  sync
+
+uv run memory-index \
+  --source ~/.openclaw/workspace-research_agent/memory \
+  --index-file ~/.openclaw/workspace-research_agent/MEMORY.md \
+  sync
+```
+
+실행 권한 부여:
+
+```bash
+chmod +x /path/to/claude-vector-memory/sync-all-memory.sh
+```
+
+crontab 등록:
+
+```bash
+(crontab -l 2>/dev/null; echo '*/10 * * * * /path/to/claude-vector-memory/sync-all-memory.sh >/tmp/all-memory-sync.log 2>&1') | crontab -
+```
+
+현재 repo에는 자동화 스크립트 예시도 포함되어 있습니다.
+- `install-and-rebuild-all.sh`
+- `sync-all-memory.sh`
+- `setup-memory-sync-cron.sh`
+
+---
+
+## Step 7. 에이전트 운영 규칙 적용
 
 이 프로젝트를 설치했다고 해서 에이전트가 자동으로 새 메모리 시스템을 우선 사용하게 되지는 않습니다.
 
@@ -361,13 +385,13 @@ fi
 
 ---
 
-## Step 7. Gateway restart가 필요한가?
+## Step 8. Gateway restart가 필요한가?
 
 대부분의 경우 **재시작은 필요 없습니다.**
 
 ### 재시작이 필요 없는 경우
 - `claude-vector-memory`를 외부 독립 CLI / Python 라이브러리로 설치해서 사용하는 경우
-- `memory-index sync`, `memory-index search` 같은 명령을 직접 호출하는 경우
+- `uv run memory-index ...` 명령을 직접 호출하는 경우
 - OpenClaw hook, wrapper, agent 운영 규칙에서 이 프로젝트를 호출하는 경우
 - AGENTS.md / SOUL.md / 운영 프롬프트에 "vector memory를 우선 사용" 규칙만 추가하는 경우
 
@@ -380,7 +404,7 @@ fi
 
 ---
 
-## 7. 파일 기반 메모리 시스템에서 사용하는 방법
+## 6. 파일 기반 메모리 시스템에서 사용하는 방법
 
 이 프로젝트는 **특정 OpenClaw 전용 구조만 요구하지 않습니다.**
 기본적으로는 Markdown 파일이 있는 어떤 디렉토리든 인덱싱할 수 있습니다.
@@ -412,7 +436,7 @@ Chunking 규칙:
 
 ---
 
-## 8. Python API 사용 예시
+## 7. Python API 사용 예시
 
 ```python
 from claude_vector_memory import MemoryIndex
@@ -426,13 +450,13 @@ with MemoryIndex(source_dir="./memory", index_file="./MEMORY.md") as idx:
 
 ---
 
-## 9. 주요 명령어
+## 8. 주요 명령어
 
 ### sync
 변경된 파일만 반영합니다. 일상 운영에서 가장 자주 쓰는 명령입니다.
 
 ```bash
-memory-index --source ./memory --index-file ./MEMORY.md sync
+uv run memory-index --source ./memory --index-file ./MEMORY.md sync
 ```
 
 ### rebuild
@@ -440,47 +464,47 @@ memory-index --source ./memory --index-file ./MEMORY.md sync
 provider를 바꾸거나 인덱스 구조를 바꿨을 때 사용합니다.
 
 ```bash
-memory-index --source ./memory --index-file ./MEMORY.md rebuild
+uv run memory-index --source ./memory --index-file ./MEMORY.md rebuild
 ```
 
 ### search
 검색을 수행합니다.
 
 ```bash
-memory-index --source ./memory --index-file ./MEMORY.md search "위험 관리 교훈"
+uv run memory-index --source ./memory --index-file ./MEMORY.md search "위험 관리 교훈"
 ```
 
 ### status
 인덱스 상태와 staleness 정보를 봅니다.
 
 ```bash
-memory-index --source ./memory --index-file ./MEMORY.md status
+uv run memory-index --source ./memory --index-file ./MEMORY.md status
 ```
 
 ### tags
 자동 추론된 태그 목록을 봅니다.
 
 ```bash
-memory-index --source ./memory --index-file ./MEMORY.md tags
+uv run memory-index --source ./memory --index-file ./MEMORY.md tags
 ```
 
 ### doctor
 환경과 인덱스 상태를 검사합니다.
 
 ```bash
-memory-index --source ./memory --index-file ./MEMORY.md doctor
+uv run memory-index --source ./memory --index-file ./MEMORY.md doctor
 ```
 
 ### verify
 FTS / vector / hybrid 품질을 비교합니다.
 
 ```bash
-memory-index --source ./memory --index-file ./MEMORY.md verify
+uv run memory-index --source ./memory --index-file ./MEMORY.md verify
 ```
 
 ---
 
-## 10. 포함된 예제 파일
+## 9. 포함된 예제 파일
 
 - `examples/single_agent.py`
   - 단일 에이전트 예제
@@ -493,7 +517,7 @@ memory-index --source ./memory --index-file ./MEMORY.md verify
 
 ---
 
-## 11. 주의사항
+## 10. 주의사항
 
 - DB 파일은 **원본 데이터가 아닙니다**
 - Markdown 메모리 파일이 원본입니다
@@ -503,7 +527,7 @@ memory-index --source ./memory --index-file ./MEMORY.md verify
 
 ---
 
-## 12. 요약
+## 11. 요약
 
 이 프로젝트는 다음을 위한 도구입니다.
 
