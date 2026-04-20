@@ -184,6 +184,22 @@ memory-index --help
 └── .memory_index.db
 ```
 
+### 중요: `--source` 와 `--index-file` 는 반드시 같은 workspace 루트 아래에 있어야 합니다
+
+예를 들어 아래 조합은 **올바릅니다**.
+
+- `--source ~/.openclaw/workspace-coding_agent/memory`
+- `--index-file ~/.openclaw/workspace-coding_agent/MEMORY.md`
+
+반대로 아래처럼 서로 다른 루트를 섞으면 **안 됩니다**.
+
+- `--source ~/.openclaw/agents/coding_agent/memory`
+- `--index-file ~/.openclaw/workspace-coding_agent/MEMORY.md`
+
+즉 원칙은 다음과 같습니다.
+- `source`와 `index-file`는 같은 workspace 안에 있어야 함
+- 일반적으로 둘 다 `workspace-<agent>/...` 아래를 가리키게 설정할 것
+
 최초 인덱스 생성:
 
 ```bash
@@ -229,6 +245,7 @@ uv run memory-index \
 - 메모리 엔진은 공용
 - 메모리 원본 파일은 에이전트별 분리
 - DB 파일도 에이전트별 분리
+- 각 에이전트마다 `--source` 와 `--index-file` 는 반드시 같은 workspace 루트 아래에서 짝을 맞출 것
 
 예시:
 
@@ -249,6 +266,20 @@ uv run memory-index \
     ├── memory/
     └── .memory_index.db
 ```
+
+올바른 예:
+- `coding_agent`
+  - `--source ~/.openclaw/workspace-coding_agent/memory`
+  - `--index-file ~/.openclaw/workspace-coding_agent/MEMORY.md`
+- `research_agent`
+  - `--source ~/.openclaw/workspace-research_agent/memory`
+  - `--index-file ~/.openclaw/workspace-research_agent/MEMORY.md`
+
+잘못된 예:
+- `--source ~/.openclaw/agents/coding_agent/memory`
+- `--index-file ~/.openclaw/workspace-coding_agent/MEMORY.md`
+
+이처럼 `agents/...` 경로와 `workspace-...` 경로를 섞으면 인덱싱 중 경로 계산 오류가 발생할 수 있습니다.
 
 ```bash
 uv run memory-index \
