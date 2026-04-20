@@ -48,26 +48,12 @@ DB는 언제든 다시 만들 수 있는 인덱스일 뿐입니다.
 
 ## 3. 설치 방식 이해하기
 
-이 프로젝트는 두 가지 방식으로 사용할 수 있습니다.
+이 프로젝트는 **현재 기준으로 GitHub/source 설치 방식만 사용**합니다.
+PyPI 배포를 전제로 하지 않으므로, `pip install "claude-vector-memory[neural]"` 같은 설치 방식은 지원하지 않습니다.
 
-### 방식 A. 패키지 사용자 방식
+권장 설치 방식은 다음 두 가지입니다.
 
-배포된 패키지를 설치해서 사용하는 방법입니다.
-
-```bash
-pip install "claude-vector-memory[neural]"
-```
-
-이 방식은 **일반 사용자용**입니다.
-설치가 끝나면 `memory-index`라는 CLI 명령을 사용할 수 있습니다.
-
-예:
-
-```bash
-memory-index --help
-```
-
-### 방식 B. 소스 체크아웃 + uv 방식
+### 방식 A. 권장 방식: 소스 체크아웃 + uv
 
 repo를 clone해서 직접 사용하는 방법입니다.
 
@@ -77,35 +63,51 @@ cd claude-vector-memory
 uv sync --all-extras
 ```
 
-이 방식은 **개발자 / 로컬 수정 / 테스트용**입니다.
-이 경우에는 보통 아래처럼 실행합니다.
+이 방식은 가장 안전하고 간단합니다.
+실행은 보통 아래처럼 합니다.
 
 ```bash
 uv run memory-index --help
 ```
 
-즉,
-- 패키지 설치 사용자 → `memory-index ...`
-- 소스 repo 사용자 → `uv run memory-index ...`
+### 방식 B. 선택 방식: Python 가상환경 + pip editable 설치
 
-로 이해하시면 됩니다.
+가상환경 안에서 로컬 프로젝트를 editable 설치하는 방법입니다.
+
+```bash
+git clone <repo-url>
+cd claude-vector-memory
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[neural]"
+```
+
+설치가 끝나면 아래처럼 실행할 수 있습니다.
+
+```bash
+memory-index --help
+```
+
+주의:
+- macOS/Homebrew Python 환경에서는 시스템 Python에 직접 `pip install -e ...` 하면 PEP 668 때문에 막힐 수 있습니다
+- 따라서 일반적으로는 **`uv sync --all-extras` + `uv run memory-index ...` 방식이 더 안전**합니다
 
 ---
 
 ## 4. extras 문법 설명: `[neural]`, `[openai]`, `[all]`
 
-Python 패키지 설치에서 `[neural]` 같은 표기는 **optional dependencies(extras)** 를 의미합니다.
+이 프로젝트는 PyPI 패키지 배포를 전제로 하지 않지만, 로컬 editable 설치 시에도 Python extras 문법을 사용할 수 있습니다.
 
 예를 들어:
 
 ```bash
-pip install "claude-vector-memory[neural]"
+pip install -e ".[neural]"
 ```
 
 이건 `claude-vector-memoryneural` 같은 뜻이 아닙니다.
 의미는 다음과 같습니다.
 
-- 기본 패키지 `claude-vector-memory` 설치
+- 현재 디렉토리의 프로젝트를 설치
 - 추가로 `neural` 그룹에 정의된 의존성도 같이 설치
 
 현재 extras 의미:
@@ -119,9 +121,9 @@ pip install "claude-vector-memory[neural]"
 예:
 
 ```bash
-pip install "claude-vector-memory[neural]"
-pip install "claude-vector-memory[openai]"
-pip install "claude-vector-memory[all]"
+pip install -e ".[neural]"
+pip install -e ".[openai]"
+pip install -e ".[all]"
 ```
 
 ---
@@ -137,25 +139,26 @@ pip install "claude-vector-memory[all]"
 
 즉 가장 권장되는 설치는 보통 아래 둘 중 하나입니다.
 
-### 패키지 설치 사용자
-
-```bash
-pip install "claude-vector-memory[neural]"
-```
-
-### repo를 clone해서 직접 사용하는 사용자
+### 권장 기본 방식
 
 ```bash
 uv sync --all-extras
 ```
 
+### 가상환경 + pip editable 설치 방식
+
+```bash
+pip install -e ".[neural]"
+```
+
 차이점:
-- `pip install "claude-vector-memory[neural]"`
-  - 일반 사용자용
-  - 설치 후 `memory-index` 명령 사용
 - `uv sync --all-extras`
-  - repo 개발/수정/로컬 테스트용
+  - 가장 권장되는 기본 설치 방식
+  - repo 기준으로 개발/실사용 모두 안정적
   - 보통 `uv run memory-index` 사용
+- `pip install -e ".[neural]"`
+  - 가상환경 안에서 로컬 프로젝트를 설치할 때 사용
+  - 설치 후 `memory-index` 명령 사용 가능
 
 ---
 
