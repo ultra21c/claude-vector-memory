@@ -48,12 +48,12 @@ DB는 언제든 다시 만들 수 있는 인덱스일 뿐입니다.
 
 ## 3. 설치 방식 이해하기
 
-이 프로젝트는 **현재 기준으로 GitHub/source 설치 방식만 사용**합니다.
-PyPI 배포를 전제로 하지 않으므로, `pip install "claude-vector-memory[neural]"` 같은 설치 방식은 지원하지 않습니다.
+이 프로젝트는 **GitHub/source 설치 방식만 사용**합니다.
+PyPI 배포를 전제로 하지 않으며, 패키지 저장소에서 설치하는 방식은 지원하지 않습니다.
 
-권장 설치 방식은 다음 두 가지입니다.
+권장 설치 방식은 다음 하나입니다.
 
-### 방식 A. 권장 방식: 소스 체크아웃 + uv
+### 권장 방식: 소스 체크아웃 + uv
 
 repo를 clone해서 직접 사용하는 방법입니다.
 
@@ -63,72 +63,16 @@ cd claude-vector-memory
 uv sync --all-extras
 ```
 
-이 방식은 가장 안전하고 간단합니다.
-실행은 보통 아래처럼 합니다.
-
-```bash
-uv run memory-index --help
-```
-
-### 방식 B. 선택 방식: Python 가상환경 + pip editable 설치
-
-가상환경 안에서 로컬 프로젝트를 editable 설치하는 방법입니다.
-
-```bash
-git clone <repo-url>
-cd claude-vector-memory
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[neural]"
-```
-
-설치가 끝나면 아래처럼 실행할 수 있습니다.
-
-```bash
-memory-index --help
-```
+이 방식이 가장 안전하고 간단합니다.
+또한 README의 모든 예시는 이 설치 방식을 기준으로 설명합니다.
 
 주의:
-- macOS/Homebrew Python 환경에서는 시스템 Python에 직접 `pip install -e ...` 하면 PEP 668 때문에 막힐 수 있습니다
-- 따라서 일반적으로는 **`uv sync --all-extras` + `uv run memory-index ...` 방식이 더 안전**합니다
+- macOS/Homebrew Python 환경에서는 시스템 Python에 직접 설치하는 방식이 막힐 수 있습니다
+- 따라서 일반적으로는 **`uv sync --all-extras` 방식이 가장 안전한 기본 설치 방법**입니다
 
 ---
 
-## 4. extras 문법 설명: `[neural]`, `[openai]`, `[all]`
-
-이 프로젝트는 PyPI 패키지 배포를 전제로 하지 않지만, 로컬 editable 설치 시에도 Python extras 문법을 사용할 수 있습니다.
-
-예를 들어:
-
-```bash
-pip install -e ".[neural]"
-```
-
-이건 `claude-vector-memoryneural` 같은 뜻이 아닙니다.
-의미는 다음과 같습니다.
-
-- 현재 디렉토리의 프로젝트를 설치
-- 추가로 `neural` 그룹에 정의된 의존성도 같이 설치
-
-현재 extras 의미:
-- `[neural]`
-  - local neural embedding + reranking용 의존성 설치
-- `[openai]`
-  - OpenAI 임베딩용 의존성 설치
-- `[all]`
-  - 모든 optional dependency 설치
-
-예:
-
-```bash
-pip install -e ".[neural]"
-pip install -e ".[openai]"
-pip install -e ".[all]"
-```
-
----
-
-## 5. 권장 검색 품질 모드
+## 4. 권장 검색 품질 모드
 
 현재 기준 최고 품질 모드는 다음입니다.
 
@@ -137,28 +81,14 @@ pip install -e ".[all]"
 - hybrid retrieval
 - cross-encoder reranking
 
-즉 가장 권장되는 설치는 보통 아래 둘 중 하나입니다.
-
-### 권장 기본 방식
+이를 위해 가장 권장되는 설치 방법은 아래입니다.
 
 ```bash
 uv sync --all-extras
 ```
 
-### 가상환경 + pip editable 설치 방식
-
-```bash
-pip install -e ".[neural]"
-```
-
-차이점:
-- `uv sync --all-extras`
-  - 가장 권장되는 기본 설치 방식
-  - repo 기준으로 개발/실사용 모두 안정적
-  - 보통 `uv run memory-index` 사용
-- `pip install -e ".[neural]"`
-  - 가상환경 안에서 로컬 프로젝트를 설치할 때 사용
-  - 설치 후 `memory-index` 명령 사용 가능
+이 명령은 프로젝트에서 사용하는 optional dependency까지 함께 설치합니다.
+즉, 최고 품질 검색에 필요한 neural embedding 및 reranking 의존성까지 한 번에 준비합니다.
 
 ---
 
@@ -199,12 +129,6 @@ my-agent/
 git clone <repo-url>
 cd claude-vector-memory
 uv sync --all-extras
-```
-
-설치가 끝나면 아래 명령이 동작해야 합니다.
-
-```bash
-uv run memory-index --help
 ```
 
 이 방식이 가장 안전하고, README의 예제도 기본적으로 이 흐름을 기준으로 설명합니다.
@@ -259,46 +183,6 @@ memory-index --help
 │   └── lessons.md
 └── .memory_index.db
 ```
-
-### 패키지 설치 방식일 때
-
-최초 인덱스 생성:
-
-```bash
-memory-index \
-  --source ~/.openclaw/workspace-coding_agent/memory \
-  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
-  rebuild
-```
-
-상태 점검:
-
-```bash
-memory-index \
-  --source ~/.openclaw/workspace-coding_agent/memory \
-  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
-  doctor
-```
-
-검색 테스트:
-
-```bash
-memory-index \
-  --source ~/.openclaw/workspace-coding_agent/memory \
-  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
-  search "deployment rule"
-```
-
-일상 운영:
-
-```bash
-memory-index \
-  --source ~/.openclaw/workspace-coding_agent/memory \
-  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
-  sync
-```
-
-### repo + uv 방식일 때
 
 최초 인덱스 생성:
 
@@ -365,44 +249,6 @@ uv run memory-index \
     ├── memory/
     └── .memory_index.db
 ```
-
-### 패키지 설치 방식일 때
-
-```bash
-# coding_agent
-memory-index \
-  --source ~/.openclaw/workspace-coding_agent/memory \
-  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
-  rebuild
-
-# research_agent
-memory-index \
-  --source ~/.openclaw/workspace-research_agent/memory \
-  --index-file ~/.openclaw/workspace-research_agent/MEMORY.md \
-  rebuild
-
-# support_agent
-memory-index \
-  --source ~/.openclaw/workspace-support_agent/memory \
-  --index-file ~/.openclaw/workspace-support_agent/MEMORY.md \
-  rebuild
-```
-
-이후 일상 운영:
-
-```bash
-memory-index \
-  --source ~/.openclaw/workspace-coding_agent/memory \
-  --index-file ~/.openclaw/workspace-coding_agent/MEMORY.md \
-  sync
-
-memory-index \
-  --source ~/.openclaw/workspace-research_agent/memory \
-  --index-file ~/.openclaw/workspace-research_agent/MEMORY.md \
-  sync
-```
-
-### repo + uv 방식일 때
 
 ```bash
 uv run memory-index \
