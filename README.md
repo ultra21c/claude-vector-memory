@@ -362,6 +362,9 @@ crontab 등록:
 
 이 프로젝트를 설치했다고 해서 에이전트가 자동으로 새 메모리 시스템을 우선 사용하게 되지는 않습니다.
 
+즉, 다른 에이전트에게는 단순히 "claude-vector-memory를 우선 사용하라"고만 말하면 부족할 수 있습니다.
+운영 규칙, 프로젝트 위치, 실행 방식, 경로 규칙까지 함께 전달하는 것이 좋습니다.
+
 실제 운영에서는 아래 규칙을 적용하는 것을 권장합니다.
 
 ### 권장 운영 규칙
@@ -382,6 +385,23 @@ crontab 등록:
 - 그 다음 `search` 또는 `retrieve`
 - 기존 `memory_search`는 fallback
 - 다른 에이전트 메모리와 섞지 말 것
+
+### 다른 OpenClaw 에이전트에게 전달할 때
+
+권장 운영 규칙 섹션은 그대로 복사해서 OpenClaw 에이전트에게 메시지로 전달하는 용도로 사용할 수 있습니다.
+다만 실제 적용을 위해서는 아래 정보도 함께 전달하는 것을 권장합니다.
+
+- 프로젝트 위치
+  - 예: `/Users/lucas/working/claude-vector-memory`
+- 실행 방식
+  - 예: `cd /Users/lucas/working/claude-vector-memory && uv run memory-index ...`
+- 경로 규칙
+  - `--source <workspace>/memory`
+  - `--index-file <workspace>/MEMORY.md`
+  - 두 경로는 반드시 같은 workspace 루트 아래여야 함
+
+즉, README의 이 섹션을 복사해서 OpenClaw 에이전트에게 전달하면 좋고,
+필요하면 에이전트별 workspace 경로만 알맞게 바꿔서 보내면 됩니다.
 
 ---
 
